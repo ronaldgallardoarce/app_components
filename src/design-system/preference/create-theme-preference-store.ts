@@ -43,10 +43,19 @@ export function createThemePreferenceStore({ storage, apply }: ThemePreferenceSt
       if (preference === current) {
         return;
       }
-      storage.set(preference);
+      // Apply first: if it throws, nothing is persisted and the store stays consistent.
       apply(preference);
       current = preference;
       listeners.forEach((listener) => listener());
+      // Persisting is best effort: a storage failure keeps the theme for this session
+      // instead of failing the user's action.
+      try {
+        storage.set(preference);
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('Could not persist the theme preference; it applies to this session only.', error);
+        }
+      }
     },
     subscribe(listener) {
       listeners.add(listener);
