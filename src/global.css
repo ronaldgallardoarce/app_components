@@ -1,9 +1,99 @@
-:root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+/*
+ * Design tokens: SINGLE SOURCE OF TRUTH.
+ *
+ * Every color, radius and spacing token of the design system lives in this file.
+ * Components consume them only through Tailwind classes (e.g. `bg-primary`,
+ * `text-muted-foreground`, `rounded-md`); JS code that needs a raw value must read it
+ * from these CSS variables via Uniwind (`colorClassName`, `useCSSVariable`) instead of
+ * duplicating hex values in TypeScript.
+ *
+ * Palette: React Native Reusables "neutral" theme with project-approved values.
+ * RNR's `destructive` token is renamed `danger`; `success`, `warning` and `info` are
+ * project additions. `*-text` tokens are for colored text on `background`.
+ * Theme switching: Uniwind `light` / `dark` variants (see theme preference module).
+ * Tailwind's rem base is 16px (Uniwind `polyfills.rem`, set in metro.config.js).
+ */
+
+@import 'tailwindcss';
+@import 'uniwind';
+
+@theme {
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  --spacing-hairline: hairlineWidth();
+}
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-background: #ffffff;
+      --color-foreground: #0a0a0a;
+      --color-card: #ffffff;
+      --color-card-foreground: #0a0a0a;
+      --color-popover: #ffffff;
+      --color-popover-foreground: #0a0a0a;
+      --color-primary: #171717;
+      --color-primary-foreground: #fafafa;
+      --color-secondary: #f5f5f5;
+      --color-secondary-foreground: #171717;
+      --color-muted: #f5f5f5;
+      /* AA-corrected (RNR default #737373 is below 4.5:1 on muted). */
+      --color-muted-foreground: #6b6b6b;
+      --color-accent: #f5f5f5;
+      --color-accent-foreground: #171717;
+      --color-border: #e5e5e5;
+      --color-input: #e5e5e5;
+      --color-ring: #a1a1a1;
+
+      --color-danger: #dc2626;
+      --color-danger-foreground: #ffffff;
+      --color-danger-text: #dc2626;
+      --color-success: #15803d;
+      --color-success-foreground: #ffffff;
+      --color-success-text: #15803d;
+      --color-warning: #f59e0b;
+      --color-warning-foreground: #0a0a0a;
+      --color-warning-text: #b45309;
+      --color-info: #2563eb;
+      --color-info-foreground: #ffffff;
+      --color-info-text: #2563eb;
+    }
+
+    @variant dark {
+      --color-background: #0a0a0a;
+      --color-foreground: #fafafa;
+      --color-card: #0a0a0a;
+      --color-card-foreground: #fafafa;
+      --color-popover: #0a0a0a;
+      --color-popover-foreground: #fafafa;
+      --color-primary: #fafafa;
+      --color-primary-foreground: #171717;
+      --color-secondary: #262626;
+      --color-secondary-foreground: #fafafa;
+      --color-muted: #262626;
+      --color-muted-foreground: #a3a3a3;
+      --color-accent: #262626;
+      --color-accent-foreground: #fafafa;
+      --color-border: #262626;
+      --color-input: #262626;
+      --color-ring: #737373;
+
+      --color-danger: #f87171;
+      --color-danger-foreground: #0a0a0a;
+      --color-danger-text: #f87171;
+      --color-success: #22c55e;
+      --color-success-foreground: #0a0a0a;
+      --color-success-text: #22c55e;
+      --color-warning: #fbbf24;
+      --color-warning-foreground: #0a0a0a;
+      --color-warning-text: #fbbf24;
+      --color-info: #60a5fa;
+      --color-info-foreground: #0a0a0a;
+      --color-info-text: #60a5fa;
+    }
+  }
 }
