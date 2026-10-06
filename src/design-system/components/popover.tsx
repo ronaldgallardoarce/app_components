@@ -1,4 +1,4 @@
-import { NativeOnlyAnimatedView } from '@/design-system/components/native-only-animated-view';
+import { AnimatedPressable } from '@/design-system/components/animated-pressable';
 import { TextClassContext } from '@/design-system/components/text';
 import { cn } from '@/design-system/lib/utils';
 import * as PopoverPrimitive from '@rn-primitives/popover';
@@ -25,32 +25,22 @@ function PopoverContent({
   return (
     <PopoverPrimitive.Portal hostName={portalHost}>
       <FullWindowOverlay>
-        <PopoverPrimitive.Overlay
-          style={Platform.select({ native: StyleSheet.absoluteFill })}
-          asChild={Platform.OS !== 'web'}>
-          <NativeOnlyAnimatedView
+        <PopoverPrimitive.Overlay style={StyleSheet.absoluteFill} asChild>
+          <AnimatedPressable
             entering={FadeIn.duration(200).reduceMotion(ReduceMotion.System)}
-            exiting={FadeOut.reduceMotion(ReduceMotion.System)}
-            as="Pressable">
+            exiting={FadeOut.reduceMotion(ReduceMotion.System)}>
             <TextClassContext.Provider value="text-popover-foreground">
               <PopoverPrimitive.Content
                 align={align}
                 sideOffset={sideOffset}
                 className={cn(
-                  'bg-popover border-border outline-hidden z-50 w-72 rounded-md border p-4 shadow-md shadow-black/5',
-                  Platform.select({
-                    web: cn(
-                      'animate-in fade-in-0 zoom-in-95 origin-(--radix-popover-content-transform-origin) cursor-auto',
-                      props.side === 'bottom' && 'slide-in-from-top-2',
-                      props.side === 'top' && 'slide-in-from-bottom-2'
-                    ),
-                  }),
+                  'bg-popover border-border z-50 w-72 rounded-md border p-4 shadow-md shadow-black/5',
                   className
                 )}
                 {...props}
               />
             </TextClassContext.Provider>
-          </NativeOnlyAnimatedView>
+          </AnimatedPressable>
         </PopoverPrimitive.Overlay>
       </FullWindowOverlay>
     </PopoverPrimitive.Portal>

@@ -2,43 +2,28 @@ import { TextClassContext } from '@/design-system/components/text';
 import { cn } from '@/design-system/lib/utils';
 import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 
 // Based on React Native Reusables' Uniwind badge. RNR's `default` is `primary` and
 // `destructive` is `danger`; `success`, `warning` and `info` are project additions.
+// `*-soft` variants are low-emphasis tinted badges built on the `*-soft` tokens.
 
 const badgeVariants = cva(
-  cn(
-    'border-border shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5',
-    Platform.select({
-      web: 'group focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-danger/20 dark:aria-invalid:ring-danger/40 aria-invalid:border-danger w-fit whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] [&>svg]:pointer-events-none [&>svg]:size-3',
-    })
-  ),
+  'border-border shrink-0 flex-row items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5',
   {
     variants: {
       variant: {
-        primary: cn(
-          'bg-primary border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-primary/90' })
-        ),
-        secondary: cn(
-          'bg-secondary border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-secondary/90' })
-        ),
-        outline: Platform.select({ web: '[a&]:hover:bg-accent [a&]:hover:text-accent-foreground' }),
-        danger: cn(
-          'bg-danger border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-danger/90' })
-        ),
-        success: cn(
-          'bg-success border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-success/90' })
-        ),
-        warning: cn(
-          'bg-warning border-transparent',
-          Platform.select({ web: '[a&]:hover:bg-warning/90' })
-        ),
-        info: cn('bg-info border-transparent', Platform.select({ web: '[a&]:hover:bg-info/90' })),
+        primary: 'bg-primary border-transparent',
+        secondary: 'bg-secondary border-transparent',
+        outline: '',
+        danger: 'bg-danger border-transparent',
+        success: 'bg-success border-transparent',
+        warning: 'bg-warning border-transparent',
+        info: 'bg-info border-transparent',
+        'danger-soft': 'bg-danger-soft border-danger-border',
+        'success-soft': 'bg-success-soft border-success-border',
+        'warning-soft': 'bg-warning-soft border-warning-border',
+        'info-soft': 'bg-info-soft border-info-border',
       },
     },
     defaultVariants: {
@@ -57,6 +42,10 @@ const badgeTextVariants = cva('text-xs font-medium', {
       success: 'text-success-foreground',
       warning: 'text-warning-foreground',
       info: 'text-info-foreground',
+      'danger-soft': 'text-danger-soft-foreground',
+      'success-soft': 'text-success-soft-foreground',
+      'warning-soft': 'text-warning-soft-foreground',
+      'info-soft': 'text-info-soft-foreground',
     },
   },
   defaultVariants: {

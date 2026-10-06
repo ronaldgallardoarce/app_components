@@ -39,7 +39,8 @@ npx expo-doctor
 
 ## Conventions
 
-- **Uniwind Free only.** Never use Pro-only features. `group-*` classes are allowed only inside `Platform.select({ web })`; on native, pressed styles come from the Pressable `pressed` state (`Button` render function or `usePressed`).
+- **Uniwind Free only.** Never use Pro-only features. No `group-*` classes: pressed styles come from the Pressable `pressed` state (`Button` render function or `usePressed`).
+- **iOS and Android only.** No web target: when adding RNR components, drop their `Platform.select({ web })` / `Platform.OS === 'web'` branches and web-only classes (`hover:`, `focus-visible:`, `cursor-*`, `outline-*`).
 - **Tokens only.** Components use token classes (`bg-primary`, `text-danger-text`); no hardcoded hex values. JS that needs a color reads it from the CSS variables (`colorClassName`, `useCSSVariable`).
 - **No barrel files.** Import each component from its own file with the `@/` alias, e.g. `@/design-system/components/button`.
 - Add RNR components with the CLI, then adapt them (`destructive` is called `danger`):

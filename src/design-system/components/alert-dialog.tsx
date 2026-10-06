@@ -3,7 +3,7 @@ import {
   buttonVariants,
   type ButtonVariant,
 } from '@/design-system/components/button';
-import { NativeOnlyAnimatedView } from '@/design-system/components/native-only-animated-view';
+import { AnimatedPressable } from '@/design-system/components/animated-pressable';
 import { TextClassContext } from '@/design-system/components/text';
 import { usePressed } from '@/design-system/lib/use-pressed';
 import { cn } from '@/design-system/lib/utils';
@@ -33,19 +33,15 @@ function AlertDialogOverlay({
       <AlertDialogPrimitive.Overlay
         className={cn(
           'absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2',
-          Platform.select({
-            web: 'animate-in fade-in-0 fixed',
-          }),
           className
         )}
         {...props}
-        asChild={Platform.OS !== 'web'}>
-        <NativeOnlyAnimatedView
+        asChild>
+        <AnimatedPressable
           entering={FadeIn.duration(200).delay(50).reduceMotion(ReduceMotion.System)}
-          exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}
-          as="Pressable">
+          exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}>
           <>{children}</>
-        </NativeOnlyAnimatedView>
+        </AnimatedPressable>
       </AlertDialogPrimitive.Overlay>
     </FullWindowOverlay>
   );
@@ -64,9 +60,6 @@ function AlertDialogContent({
         <AlertDialogPrimitive.Content
           className={cn(
             'bg-background border-border z-50 flex flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-lg',
-            Platform.select({
-              web: 'animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
-            }),
             className
           )}
           {...props}

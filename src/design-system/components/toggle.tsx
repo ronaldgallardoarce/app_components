@@ -4,25 +4,14 @@ import { cn } from '@/design-system/lib/utils';
 import * as TogglePrimitive from '@rn-primitives/toggle';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { Platform } from 'react-native';
 
 const toggleVariants = cva(
-  cn(
-    'active:bg-muted flex flex-row items-center justify-center gap-2 rounded-md',
-    Platform.select({
-      web: 'group hover:bg-muted hover:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-danger/20 dark:aria-invalid:ring-danger/40 aria-invalid:border-danger inline-flex cursor-default whitespace-nowrap outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none [&_svg]:pointer-events-none',
-    })
-  ),
+  'active:bg-muted flex flex-row items-center justify-center gap-2 rounded-md',
   {
     variants: {
       variant: {
         default: 'bg-transparent',
-        outline: cn(
-          'border-input active:bg-accent border bg-transparent shadow-sm shadow-black/5',
-          Platform.select({
-            web: 'hover:bg-accent hover:text-accent-foreground',
-          })
-        ),
+        outline: 'border-input active:bg-accent border bg-transparent shadow-sm shadow-black/5',
       },
       size: {
         default: 'h-10 min-w-10 px-2.5 sm:h-9 sm:min-w-9 sm:px-2',
@@ -47,9 +36,7 @@ function Toggle({
     <TextClassContext.Provider
       value={cn(
         'text-sm text-foreground font-medium',
-        props.pressed
-          ? 'text-accent-foreground'
-          : Platform.select({ web: 'group-hover:text-muted-foreground' }),
+        props.pressed && 'text-accent-foreground',
         className
       )}>
       <TogglePrimitive.Root

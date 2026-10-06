@@ -9,7 +9,8 @@
  *
  * Palette: React Native Reusables "neutral" theme with project-approved values.
  * RNR's `destructive` token is renamed `danger`; `success`, `warning` and `info` are
- * project additions. `*-text` tokens are for colored text on `background`.
+ * project additions. `*-text` tokens are for colored text on `background`; `*-soft`,
+ * `*-soft-foreground` and `*-border` are tinted low-emphasis surfaces (badges, alerts).
  * Theme switching: Uniwind `light` / `dark` variants (see theme preference module).
  * Tailwind's rem base is 16px (Uniwind `polyfills.rem`, set in metro.config.js).
  */
@@ -61,6 +62,20 @@
       --color-info: #2563eb;
       --color-info-foreground: #ffffff;
       --color-info-text: #2563eb;
+
+      /* Soft tints for low-emphasis surfaces (badges, alerts, chips). */
+      --color-danger-soft: #fdecec;
+      --color-danger-soft-foreground: #a31d22;
+      --color-danger-border: #f7c9ca;
+      --color-success-soft: #dff3e5;
+      --color-success-soft-foreground: #146b3c;
+      --color-success-border: #bee7cd;
+      --color-warning-soft: #fdf1dc;
+      --color-warning-soft-foreground: #8a5300;
+      --color-warning-border: #f7dfb0;
+      --color-info-soft: #e7f0fb;
+      --color-info-soft-foreground: #1b4fa8;
+      --color-info-border: #c5daf7;
     }
 
     @variant dark {
@@ -94,6 +109,20 @@
       --color-info: #60a5fa;
       --color-info-foreground: #0a0a0a;
       --color-info-text: #60a5fa;
+
+      /* Soft tints for low-emphasis surfaces (badges, alerts, chips). */
+      --color-danger-soft: #2a1416;
+      --color-danger-soft-foreground: #ffb3b6;
+      --color-danger-border: #4d2124;
+      --color-success-soft: #11291c;
+      --color-success-soft-foreground: #8fe7bc;
+      --color-success-border: #1e4632;
+      --color-warning-soft: #2a1f0d;
+      --color-warning-soft-foreground: #fbd9a0;
+      --color-warning-border: #4a3818;
+      --color-info-soft: #11203a;
+      --color-info-soft-foreground: #a8c9ff;
+      --color-info-border: #1f3a63;
     }
   }
 }
