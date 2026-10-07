@@ -28,6 +28,9 @@ const HIDE_EVENT = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide
 /** Fallback when the platform reports no animation duration (Android `keyboardDid*`). */
 const DEFAULT_DURATION = 200;
 
+/** Frames to wait for the measured view's first layout before accepting a 0 size. */
+const MAX_MEASURE_RETRIES = 5;
+
 const timing = (duration: number) => ({
   duration: duration > 0 ? duration : DEFAULT_DURATION,
   reduceMotion: ReduceMotion.System,
@@ -47,11 +50,25 @@ function useKeyboardAvoidingStyle() {
   const inset = useSharedValue(0);
 
   React.useEffect(() => {
-    const avoid = (keyboardTop: number, duration: number) => {
+    // `measureInWindow` is async. Every keyboard event bumps `seq`, so a measurement that resolves
+    // after a newer event (e.g. a hide landing before a show's measurement) is dropped instead of
+    // padding the overlay for a keyboard that is gone.
+    let seq = 0;
+    let frame: number | undefined;
+
+    const measure = (id: number, keyboardTop: number, duration: number, retries: number) => {
       ref.current?.measureInWindow((_x, y, _width, height) => {
+        if (id !== seq) return;
+        // Before the first layout (keyboard already open at mount) the view measures 0x0:
+        // retry on the next frames instead of settling on a 0 inset.
+        if (height === 0 && retries < MAX_MEASURE_RETRIES) {
+          frame = requestAnimationFrame(() => measure(id, keyboardTop, duration, retries + 1));
+          return;
+        }
         inset.set(withTiming(Math.max(0, y + height - keyboardTop), timing(duration)));
       });
     };
+    const avoid = (keyboardTop: number, duration: number) => measure(++seq, keyboardTop, duration, 0);
 
     // The keyboard may already be open when the overlay mounts (e.g. opened from a focused field).
     const metrics = Keyboard.isVisible() ? Keyboard.metrics() : undefined;
@@ -62,11 +79,20 @@ function useKeyboardAvoidingStyle() {
     const show = Keyboard.addListener(SHOW_EVENT, (event: KeyboardEvent) => {
       avoid(event.endCoordinates.screenY, event.duration);
     });
+    // iOS only (Android re-emits `keyboardDidShow` instead): height changes while open, such as
+    // switching to the emoji keyboard or rotating. Ignored once hidden so it cannot undo a hide.
+    const change = Keyboard.addListener('keyboardWillChangeFrame', (event: KeyboardEvent) => {
+      if (Keyboard.isVisible()) avoid(event.endCoordinates.screenY, event.duration);
+    });
     const hide = Keyboard.addListener(HIDE_EVENT, (event: KeyboardEvent) => {
+      seq++;
       inset.set(withTiming(0, timing(event.duration)));
     });
     return () => {
+      seq++;
+      if (frame !== undefined) cancelAnimationFrame(frame);
       show.remove();
+      change.remove();
       hide.remove();
     };
   }, [inset]);
@@ -90,12 +116,17 @@ function useKeyboardHeight() {
   });
 
   React.useEffect(() => {
-    const show = Keyboard.addListener(SHOW_EVENT, (event: KeyboardEvent) => {
+    const update = (event: KeyboardEvent) =>
       setHeight(Math.max(0, Dimensions.get('screen').height - event.endCoordinates.screenY));
+    const show = Keyboard.addListener(SHOW_EVENT, update);
+    // iOS only: height changes while open (see `useKeyboardAvoidingStyle`).
+    const change = Keyboard.addListener('keyboardWillChangeFrame', (event: KeyboardEvent) => {
+      if (Keyboard.isVisible()) update(event);
     });
     const hide = Keyboard.addListener(HIDE_EVENT, () => setHeight(0));
     return () => {
       show.remove();
+      change.remove();
       hide.remove();
     };
   }, []);

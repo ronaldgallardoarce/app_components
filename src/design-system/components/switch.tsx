@@ -17,7 +17,7 @@ function Switch({
       className={cn(
         'flex h-[1.15rem] w-8 shrink-0 flex-row items-center rounded-full border border-transparent shadow-sm shadow-black/5',
 
-        // Unchecked track uses `input-border` (>= 3:1 on background) so the off state is visible.
+        // Unchecked track uses the `input-border` token; its value (see global.css) sets the contrast.
         props.checked ? 'bg-primary' : 'bg-input-border',
         props.disabled && 'opacity-50',
         className
