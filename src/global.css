@@ -11,6 +11,8 @@
  * RNR's `destructive` token is renamed `danger`; `success`, `warning` and `info` are
  * project additions. `*-text` tokens are for colored text on `background`; `*-soft`,
  * `*-soft-foreground` and `*-border` are tinted low-emphasis surfaces (badges, alerts).
+ * `border` is for dividers and decorative frames; `input-border` is for the boundaries of
+ * interactive controls (inputs, checkbox, radio, switch track); its value sets their contrast.
  * Theme switching: Uniwind `light` / `dark` variants (see theme preference module).
  * Tailwind's rem base is 16px (Uniwind `polyfills.rem`, set in metro.config.js).
  */
@@ -48,6 +50,12 @@
       --color-accent-foreground: #171717;
       --color-border: #e5e5e5;
       --color-input: #e5e5e5;
+      /*
+       * Control boundaries. Kept at the RNR look (same as `input`) by design decision:
+       * 1.26:1 on background, below WCAG 1.4.11 (3:1). For an AA-compliant border use #8a8a8a
+       * (3.45:1 on background/card/popover).
+       */
+      --color-input-border: #e5e5e5;
       --color-ring: #a1a1a1;
 
       --color-danger: #dc2626;
@@ -95,6 +103,11 @@
       --color-accent-foreground: #fafafa;
       --color-border: #262626;
       --color-input: #262626;
+      /*
+       * Control boundaries, kept at the RNR look (same as `input`). For an AA-compliant border
+       * use #737373 (4.18:1 on background/card/popover).
+       */
+      --color-input-border: #262626;
       --color-ring: #737373;
 
       --color-danger: #f87171;

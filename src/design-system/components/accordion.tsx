@@ -3,7 +3,7 @@ import { TextClassContext } from '@/design-system/components/text';
 import { cn } from '@/design-system/lib/utils';
 import * as AccordionPrimitive from '@rn-primitives/accordion';
 import { ChevronDown } from 'lucide-react-native';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, {
   FadeOutUp,
   LayoutAnimationConfig,
@@ -79,8 +79,10 @@ function AccordionTrigger({
               'flex-row items-start justify-between gap-4 rounded-md py-4 disabled:opacity-50',
               className
             )}>
-            <>{children}</>
-            <Animated.View style={chevronStyle}>
+            {/* Yoga gives Text `flexShrink: 0`: without this wrapper a long title pushes the
+                chevron out of the row. `min-w-0 flex-1` lets the title wrap instead. */}
+            <View className="min-w-0 flex-1">{children}</View>
+            <Animated.View className="shrink-0" style={chevronStyle}>
               <Icon
                 as={ChevronDown}
                 size={16}

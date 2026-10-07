@@ -66,6 +66,9 @@ function Alert({
       <TextClassContext.Provider value={textClass}>
         <View
           role="alert"
+          // Android live region (RN `aria-live`, Android only): TalkBack announces the alert when it
+          // appears or its text changes. `danger` interrupts; the rest wait for current speech.
+          aria-live={variant === 'danger' ? 'assertive' : 'polite'}
           className={cn(
             'bg-card border-border relative w-full rounded-lg border px-4 pb-2 pt-3.5',
             className
@@ -85,7 +88,7 @@ function Alert({
 function AlertTitle({ className, ...props }: React.ComponentProps<typeof Text>) {
   return (
     <Text
-      className={cn('mb-1 ml-0.5 min-h-4 pl-6 font-medium leading-none tracking-tight', className)}
+      className={cn('mb-1 ml-0.5 min-h-4 pl-6 font-medium leading-snug tracking-tight', className)}
       {...props}
     />
   );

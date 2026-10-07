@@ -5,12 +5,13 @@ import {
 } from '@/design-system/components/button';
 import { AnimatedPressable } from '@/design-system/components/animated-pressable';
 import { TextClassContext } from '@/design-system/components/text';
+import { useKeyboardAvoidingStyle } from '@/design-system/lib/use-keyboard';
 import { usePressed } from '@/design-system/lib/use-pressed';
 import { cn } from '@/design-system/lib/utils';
 import * as AlertDialogPrimitive from '@rn-primitives/alert-dialog';
 import * as React from 'react';
-import { Platform, View, type ViewProps } from 'react-native';
-import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
+import { Platform, ScrollView, View, type ViewProps } from 'react-native';
+import Animated, { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 
 const AlertDialog = AlertDialogPrimitive.Root;
@@ -21,6 +22,7 @@ const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
 const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 
+/** Full-window backdrop; children are centered above the keyboard (see `DialogOverlay`). */
 function AlertDialogOverlay({
   className,
   children,
@@ -28,6 +30,7 @@ function AlertDialogOverlay({
 }: Omit<React.ComponentProps<typeof AlertDialogPrimitive.Overlay>, 'asChild'> & {
     children?: React.ReactNode;
   }) {
+  const { ref: keyboardRef, style: keyboardStyle } = useKeyboardAvoidingStyle();
   return (
     <FullWindowOverlay>
       <AlertDialogPrimitive.Overlay
@@ -40,18 +43,32 @@ function AlertDialogOverlay({
         <AnimatedPressable
           entering={FadeIn.duration(200).delay(50).reduceMotion(ReduceMotion.System)}
           exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}>
-          <>{children}</>
+          <Animated.View
+            ref={keyboardRef}
+            className="w-full flex-1 items-center justify-center"
+            style={keyboardStyle}>
+            <>{children}</>
+          </Animated.View>
         </AnimatedPressable>
       </AlertDialogPrimitive.Overlay>
     </FullWindowOverlay>
   );
 }
 
+/**
+ * `className` styles the frame; the children are laid out by `contentContainerClassName`. Like
+ * `DialogContent`, the frame is capped at 85% of the space above the keyboard and scrolls, so an
+ * alert dialog that hosts an input (e.g. "type DELETE to confirm") stays usable.
+ */
 function AlertDialogContent({
   className,
+  contentContainerClassName,
   portalHost,
+  children,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+    /** Classes for the scrollable children container (defaults: `gap-4 p-6`). */
+    contentContainerClassName?: string;
     portalHost?: string;
   }) {
   return (
@@ -59,11 +76,17 @@ function AlertDialogContent({
       <AlertDialogOverlay>
         <AlertDialogPrimitive.Content
           className={cn(
-            'bg-background border-border z-50 flex flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-lg',
+            'bg-background border-border z-50 flex max-h-[85%] shrink flex-col rounded-lg border shadow-lg shadow-black/5 sm:max-w-lg',
             className
           )}
-          {...props}
-        />
+          {...props}>
+          <ScrollView
+            className="grow-0"
+            contentContainerClassName={cn('flex flex-col gap-4 p-6', contentContainerClassName)}
+            keyboardShouldPersistTaps="handled">
+            <>{children}</>
+          </ScrollView>
+        </AlertDialogPrimitive.Content>
       </AlertDialogOverlay>
     </AlertDialogPortal>
   );

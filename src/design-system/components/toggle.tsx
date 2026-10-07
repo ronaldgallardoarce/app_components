@@ -26,10 +26,18 @@ const toggleVariants = cva(
   }
 );
 
+/**
+ * Extra touch area per size so the target is >= 48dp at the smallest visual size (`sm:` breakpoint):
+ * (48 - height) / 2. Only `Toggle` uses it; `ToggleGroupItem`s sit edge to edge, where a horizontal
+ * slop would overlap the neighbor.
+ */
+const TOGGLE_HIT_SLOP = { default: 6, sm: 8, lg: 4 } as const;
+
 function Toggle({
   className,
   variant,
   size,
+  hitSlop,
   ...props
 }: React.ComponentProps<typeof TogglePrimitive.Root> & VariantProps<typeof toggleVariants>) {
   return (
@@ -46,6 +54,7 @@ function Toggle({
           props.pressed && 'bg-accent',
           className
         )}
+        hitSlop={hitSlop ?? TOGGLE_HIT_SLOP[size ?? 'default']}
         {...props}
       />
     </TextClassContext.Provider>

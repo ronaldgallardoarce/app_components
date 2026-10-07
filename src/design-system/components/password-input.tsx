@@ -1,5 +1,10 @@
 import { Icon } from '@/design-system/components/icon';
-import { Input, type InputProps } from '@/design-system/components/input';
+import {
+  FieldError,
+  fieldErrorHint,
+  Input,
+  type InputProps,
+} from '@/design-system/components/input';
 import { cn } from '@/design-system/lib/utils';
 import { Eye, EyeOff } from 'lucide-react-native';
 import * as React from 'react';
@@ -7,7 +12,11 @@ import { Platform, Pressable, type TextInput, View } from 'react-native';
 
 type PasswordInputVariant = 'current' | 'new';
 
-/** `invalid` is forwarded to `Input`; the toggle has no border, so it needs no invalid style. */
+/**
+ * `invalid` is forwarded to `Input`; the toggle has no border, so it needs no invalid style.
+ * `errorText` is rendered by this component AFTER the wrapper (not by `Input` inside it), so the
+ * toggle stays centered on the field; like `Input`, the message is a sibling of the field.
+ */
 type PasswordInputProps = Omit<InputProps, 'secureTextEntry'> & {
     /** `current` for sign-in, `new` for sign-up / change password (drives password managers). */
     variant?: PasswordInputVariant;
@@ -40,6 +49,9 @@ function PasswordInput({
   containerClassName,
   ref,
   onSelectionChange,
+  errorText,
+  invalid,
+  accessibilityHint,
   ...props
 }: PasswordInputProps) {
   const [visible, setVisible] = React.useState(false);
@@ -73,44 +85,51 @@ function PasswordInput({
   }, [visible]);
 
   return (
-    <View className={cn('relative w-full justify-center', containerClassName)}>
-      <Input
-        autoCapitalize="none"
-        autoCorrect={false}
-        {...AUTOFILL[variant]}
-        {...props}
-        ref={setInputRef}
-        onSelectionChange={(event) => {
-          selectionRef.current = event.nativeEvent.selection;
-          onSelectionChange?.(event);
-        }}
-        secureTextEntry={!visible}
-        // 6 inset + 32 button + 10 gap, so the text stops well before the toggle.
-        className={cn('pr-12', className)}
-      />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={visible ? 'Hide password' : 'Show password'}
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={() => {
-          toggledRef.current = true;
-          setVisible((value) => !value);
-        }}
-        // 32pt button inset 6pt from the border; hitSlop grows it to the 44pt touch target.
-        hitSlop={6}
-        className={cn(
-          'absolute right-1.5 size-8 items-center justify-center rounded-md',
-          disabled && 'opacity-50'
-        )}
-      >
-        <Icon
-          as={visible ? EyeOff : Eye}
-          aria-hidden={true}
-          className="text-muted-foreground size-4"
+    <>
+      <View className={cn('relative w-full justify-center', containerClassName)}>
+        <Input
+          autoCapitalize="none"
+          autoCorrect={false}
+          {...AUTOFILL[variant]}
+          {...props}
+          invalid={invalid || Boolean(errorText)}
+          accessibilityHint={fieldErrorHint(errorText, accessibilityHint)}
+          ref={setInputRef}
+          onSelectionChange={(event) => {
+            selectionRef.current = event.nativeEvent.selection;
+            onSelectionChange?.(event);
+          }}
+          secureTextEntry={!visible}
+          // 6 inset + 32 button + 10 gap, so the text stops well before the toggle.
+          className={cn('pr-12', className)}
         />
-      </Pressable>
-    </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+          accessibilityState={{ disabled }}
+          disabled={disabled}
+          onPress={() => {
+            toggledRef.current = true;
+            setVisible((value) => !value);
+          }}
+          // 32pt button inset 6pt from the border; hitSlop grows it to a 48dp touch target. Per the
+          // React Native docs the touch area never extends past the parent: the wrapper is as tall as
+          // the field (40dp at the default font scale), so vertically it is capped there.
+          hitSlop={8}
+          className={cn(
+            'absolute right-1.5 size-8 items-center justify-center rounded-md',
+            disabled && 'opacity-50'
+          )}
+        >
+          <Icon
+            as={visible ? EyeOff : Eye}
+            aria-hidden={true}
+            className="text-muted-foreground size-4"
+          />
+        </Pressable>
+      </View>
+      {errorText ? <FieldError>{errorText}</FieldError> : null}
+    </>
   );
 }
 

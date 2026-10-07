@@ -123,15 +123,12 @@ export function FormSections() {
           defaultValue="Starts with some text"
         />
         <Label nativeID="invalid-bio-label">Invalid textarea</Label>
-        <View className="gap-1.5">
-          <Textarea
-            aria-labelledby="invalid-bio-label"
-            invalid
-            maxLength={120}
-            defaultValue="Too short"
-          />
-          <Text className="text-danger-text text-sm">Write at least 20 characters.</Text>
-        </View>
+        <Textarea
+          aria-labelledby="invalid-bio-label"
+          errorText="Write at least 20 characters."
+          maxLength={120}
+          defaultValue="Too short"
+        />
       </Section>
 
       <Section title="Password input">
@@ -166,16 +163,15 @@ export function FormSections() {
         <View className="gap-1.5">
           <EmailInput
             aria-labelledby="invalid-email-label"
-            invalid
+            errorText="Enter a valid email address."
             defaultValue="name@example"
           />
-          <Text className="text-danger-text text-sm">Enter a valid email address.</Text>
         </View>
         <Label nativeID="invalid-password-label">Invalid password</Label>
         <PasswordInput
           aria-labelledby="invalid-password-label"
           variant="new"
-          invalid
+          errorText="Use at least 8 characters."
           defaultValue="short"
         />
       </Section>

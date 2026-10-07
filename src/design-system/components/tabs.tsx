@@ -16,7 +16,7 @@ function TabsList({
   return (
     <TabsPrimitive.List
       className={cn(
-        'bg-muted mr-auto flex h-9 flex-row items-center justify-center rounded-lg p-[3px]',
+        'bg-muted mr-auto flex min-h-9 flex-row items-center justify-center rounded-lg p-[3px]',
         className
       )}
       {...props}
@@ -24,8 +24,16 @@ function TabsList({
   );
 }
 
+/**
+ * Triggers are ~30dp tall inside the 36dp list. Vertical-only slop (9dp) brings the target to 48dp
+ * without overlapping the neighboring triggers. Per the React Native docs the touch area never
+ * extends past the parent view, so the part beyond the list's own bounds may not respond.
+ */
+const TABS_TRIGGER_HIT_SLOP = { top: 9, bottom: 9 } as const;
+
 function TabsTrigger({
   className,
+  hitSlop = TABS_TRIGGER_HIT_SLOP,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   const { value } = TabsPrimitive.useRootContext();
@@ -43,6 +51,7 @@ function TabsTrigger({
           props.value === value && 'bg-background dark:border-foreground/10 dark:bg-input/30',
           className
         )}
+        hitSlop={hitSlop}
         {...props}
       />
     </TextClassContext.Provider>

@@ -23,11 +23,13 @@ const buttonVariants = cva(
         warning: 'bg-warning active:bg-warning/90 shadow-sm shadow-black/5',
         info: 'bg-info active:bg-info/90 shadow-sm shadow-black/5',
       },
+      // `min-h-*` (same values as RNR's `h-*`) so labels grow with the system font scale instead
+      // of being clipped. Touch targets reach 48dp through `hitSlop` (see `BUTTON_HIT_SLOP`).
       size: {
-        default: 'h-10 px-4 py-2 sm:h-9',
-        sm: 'h-9 gap-1.5 rounded-md px-3 sm:h-8',
-        lg: 'h-11 rounded-md px-6 sm:h-10',
-        icon: 'h-10 w-10 sm:h-9 sm:w-9',
+        default: 'min-h-10 px-4 py-2 sm:min-h-9',
+        sm: 'min-h-9 gap-1.5 rounded-md px-3 sm:min-h-8',
+        lg: 'min-h-11 rounded-md px-6 sm:min-h-10',
+        icon: 'min-h-10 min-w-10 sm:min-h-9 sm:min-w-9',
       },
     },
     defaultVariants: {
@@ -94,6 +96,19 @@ const SPINNER_COLOR_CLASS_NAME = {
   info: 'accent-info-foreground',
 } as const satisfies Record<ButtonVariant, string>;
 
+/**
+ * Extra touch area per size so the target is >= 48dp at the SMALLEST visual size of each one
+ * (the `sm:` breakpoint, >= 640dp wide: tablets and landscape phones): (48 - height) / 2.
+ * Per the React Native docs the touch area never extends past the parent view, so a button in a
+ * row exactly as tall as itself only gains the horizontal part; give such rows vertical room.
+ */
+const BUTTON_HIT_SLOP = {
+  default: 6,
+  sm: 8,
+  lg: 4,
+  icon: 6,
+} as const satisfies Record<ButtonSize, number>;
+
 type ButtonBaseProps = Omit<React.ComponentProps<typeof Pressable>, 'children'> & {
   /** Visual style. Defaults to `primary`. */
   variant?: ButtonVariant;
@@ -132,6 +147,7 @@ function Button({
   loading = false,
   disabled,
   accessibilityState,
+  hitSlop,
   children,
   ...props
 }: ButtonProps) {
@@ -143,6 +159,7 @@ function Button({
       accessibilityState={{ ...accessibilityState, disabled: isDisabled, busy: loading }}
       className={cn(isDisabled && 'opacity-50', buttonVariants({ variant, size }), className)}
       disabled={isDisabled}
+      hitSlop={hitSlop ?? BUTTON_HIT_SLOP[size]}
       {...props}
     >
       {({ pressed }) => (

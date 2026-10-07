@@ -29,6 +29,10 @@ const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
+// Touch targets: menu rows sit edge to edge inside an `overflow-hidden` panel, so `hitSlop` would
+// overlap the neighbors and be clipped. Rows use `min-h-12` (48dp) instead; padding and text keep
+// RNR's values, and the rows still grow with the font scale.
+
 function DropdownMenuSubTrigger({
   className,
   inset,
@@ -50,14 +54,15 @@ function DropdownMenuSubTrigger({
     <TextClassContext.Provider value={cn('text-sm', (open || pressed) && 'text-accent-foreground')}>
       <DropdownMenuPrimitive.SubTrigger
         className={cn(
-          'active:bg-accent flex flex-row items-center justify-between rounded-sm px-2 py-2 sm:py-1.5',
+          'active:bg-accent flex min-h-12 flex-row items-center justify-between gap-2 rounded-sm px-2 py-2 sm:py-1.5',
           className,
           open && 'bg-accent',
           inset && 'pl-8'
         )}
         {...props}
         {...pressHandlers}>
-        <>{children}</>
+        {/* Wrapped so a long label wraps instead of pushing the chevron out (see AccordionTrigger). */}
+        <View className="min-w-0 flex-1">{children}</View>
         <Icon as={icon} className={cn('text-foreground size-4 shrink-0', iconClassName)} />
       </DropdownMenuPrimitive.SubTrigger>
     </TextClassContext.Provider>
@@ -138,12 +143,14 @@ function DropdownMenuItem({
   return (
     <TextClassContext.Provider
       value={cn(
-        'text-sm text-popover-foreground',
+        // `shrink`: Yoga gives Text `flexShrink: 0`, so a long label would push a trailing
+        // `DropdownMenuShortcut` out of the row; shrinking lets the label wrap instead.
+        'text-sm text-popover-foreground shrink',
         variant === 'danger' && 'text-danger-text'
       )}>
       <DropdownMenuPrimitive.Item
         className={cn(
-          'active:bg-accent relative flex flex-row items-center gap-2 rounded-sm px-2 py-2 sm:py-1.5',
+          'active:bg-accent relative flex min-h-12 flex-row items-center gap-2 rounded-sm px-2 py-2 sm:py-1.5',
           variant === 'danger' && 'active:bg-danger/10 dark:active:bg-danger/20',
           props.disabled && 'opacity-50',
           inset && 'pl-8',
@@ -168,10 +175,10 @@ function DropdownMenuCheckboxItem({
   const { pressed, pressHandlers } = usePressed({ onPressIn, onPressOut });
   return (
     <TextClassContext.Provider
-      value={cn('text-sm text-popover-foreground', pressed && 'text-accent-foreground')}>
+      value={cn('text-sm text-popover-foreground shrink', pressed && 'text-accent-foreground')}>
       <DropdownMenuPrimitive.CheckboxItem
         className={cn(
-          'active:bg-accent relative flex flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
+          'active:bg-accent relative flex min-h-12 flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
           props.disabled && 'opacity-50',
           className
         )}
@@ -201,10 +208,10 @@ function DropdownMenuRadioItem({
   const { pressed, pressHandlers } = usePressed({ onPressIn, onPressOut });
   return (
     <TextClassContext.Provider
-      value={cn('text-sm text-popover-foreground', pressed && 'text-accent-foreground')}>
+      value={cn('text-sm text-popover-foreground shrink', pressed && 'text-accent-foreground')}>
       <DropdownMenuPrimitive.RadioItem
         className={cn(
-          'active:bg-accent relative flex flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
+          'active:bg-accent relative flex min-h-12 flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
           props.disabled && 'opacity-50',
           className
         )}
@@ -256,7 +263,7 @@ function DropdownMenuSeparator({
 function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<typeof Text>) {
   return (
     <Text
-      className={cn('text-muted-foreground ml-auto text-xs tracking-widest', className)}
+      className={cn('text-muted-foreground ml-auto shrink-0 text-xs tracking-widest', className)}
       {...props}
     />
   );

@@ -1,5 +1,9 @@
 import { Text } from '@/design-system/components/text';
-import { INVALID_FIELD_CLASS_NAME } from '@/design-system/components/input';
+import {
+  FieldError,
+  fieldErrorHint,
+  INVALID_FIELD_CLASS_NAME,
+} from '@/design-system/components/input';
 import { cn } from '@/design-system/lib/utils';
 import * as React from 'react';
 import { TextInput, View } from 'react-native';
@@ -16,6 +20,8 @@ type TextareaProps = React.ComponentProps<typeof TextInput> &
     containerClassName?: string;
     /** Marks the value as invalid with a danger border (see `Input`). */
     invalid?: boolean;
+    /** Error message below the field, exposed to screen readers on the field (see `Input`). */
+    errorText?: string;
   };
 
 /** The counter is announced only when this close to the limit (10% of `maxLength`, at least 1). */
@@ -38,6 +44,8 @@ function Textarea({
   containerClassName,
   onChangeText,
   invalid,
+  errorText,
+  accessibilityHint,
   ...props
 }: TextareaProps) {
   const controlled = props.value !== undefined;
@@ -50,45 +58,50 @@ function Textarea({
   const nearLimit = withCount && maxLength - length <= announceThreshold(maxLength);
 
   return (
-    <View className={cn('relative w-full', containerClassName)}>
-      <TextInput
-        className={cn(
-          'text-foreground border-input dark:bg-input/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 text-base shadow-sm shadow-black/5',
-          props.editable === false && 'opacity-50',
-          // Room for the counter overlaid on the bottom-right corner, so text never runs under it.
-          withCount && 'pb-7',
-          // After the base classes so tailwind-merge lets the danger border win.
-          invalid && INVALID_FIELD_CLASS_NAME,
-          className
-        )}
-        // Uniwind maps placeholder color through `placeholderTextColorClassName` (`accent-` prefix).
-        placeholderTextColorClassName={cn('accent-muted-foreground', placeholderTextColorClassName)}
-        multiline={multiline}
-        numberOfLines={numberOfLines}
-        textAlignVertical="top"
-        onChangeText={(text) => {
-          if (!controlled) {
-            setUncontrolledLength(text.length);
-          }
-          onChangeText?.(text);
-        }}
-        {...props}
-      />
-      {withCount ? (
-        <Text
-          // Announced only near the limit, so screen readers are not interrupted on every keystroke.
-          aria-live={nearLimit ? 'polite' : 'off'}
-          accessibilityLabel={`${length} of ${maxLength} characters`}
-          // Overlaid inside the field border; it must not steal touches from the input.
-          pointerEvents="none"
+    <View className={cn('w-full gap-1.5', containerClassName)}>
+      {/* The counter is positioned against this box, so the error message below never moves it. */}
+      <View className="relative w-full">
+        <TextInput
           className={cn(
-            'text-muted-foreground absolute bottom-2 right-3 text-xs tabular-nums',
-            length >= maxLength && 'text-danger-text'
+            'text-foreground border-input-border dark:bg-input/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 text-base shadow-sm shadow-black/5',
+            props.editable === false && 'opacity-50',
+            // Room for the counter overlaid on the bottom-right corner, so text never runs under it.
+            withCount && 'pb-7',
+            // After the base classes so tailwind-merge lets the danger border win.
+            (invalid || Boolean(errorText)) && INVALID_FIELD_CLASS_NAME,
+            className
           )}
-        >
-          {length}/{maxLength}
-        </Text>
-      ) : null}
+          // Uniwind maps placeholder color through `placeholderTextColorClassName` (`accent-` prefix).
+          placeholderTextColorClassName={cn('accent-muted-foreground', placeholderTextColorClassName)}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          textAlignVertical="top"
+          accessibilityHint={fieldErrorHint(errorText, accessibilityHint)}
+          onChangeText={(text) => {
+            if (!controlled) {
+              setUncontrolledLength(text.length);
+            }
+            onChangeText?.(text);
+          }}
+          {...props}
+        />
+        {withCount ? (
+          <Text
+            // Announced only near the limit, so screen readers are not interrupted on every keystroke.
+            aria-live={nearLimit ? 'polite' : 'off'}
+            accessibilityLabel={`${length} of ${maxLength} characters`}
+            // Overlaid inside the field border; it must not steal touches from the input.
+            pointerEvents="none"
+            className={cn(
+              'text-muted-foreground absolute bottom-2 right-3 text-xs tabular-nums',
+              length >= maxLength && 'text-danger-text'
+            )}
+          >
+            {length}/{maxLength}
+          </Text>
+        ) : null}
+      </View>
+      {errorText ? <FieldError>{errorText}</FieldError> : null}
     </View>
   );
 }
