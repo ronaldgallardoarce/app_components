@@ -27,6 +27,7 @@
     "clsx": "^2.1.1",
     "expo": "~57.0.26",
     "expo-constants": "~57.0.20",
+    "expo-dev-client": "~57.0.19",
     "expo-font": "~57.0.4",
     "expo-linking": "~57.0.11",
     "expo-router": "~57.0.24",
@@ -59,5 +60,6 @@
     "ios": "expo start --ios",
     "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@11.28.5+sha512.484563d30b4c2ad27cb48aa94ff2b302dbcebc8ff6bf28816c2589886e146ce7f76f354f3bc1a438e6f5e9768c302aa0a6f7add8232903cd4cf81426cbc14d9e"
 }
