@@ -34,19 +34,43 @@ const toggleVariants = cva(
  */
 const TOGGLE_HIT_SLOP = { default: 6, sm: 8, lg: 4 } as const;
 
-/** Text utilities (color, size, weight, spacing, decoration, case), with or without variants. */
-const TEXT_CLASS_PATTERN =
-  /^!?(?:[\w-]+:)*!?(?:text-|font-|leading-|tracking-|decoration-|underline|line-through|no-underline|italic$|not-italic$|uppercase$|lowercase$|capitalize$|normal-case$)/;
+/** Text utilities (color, size, weight, spacing, decoration, case), without variants. */
+const TEXT_UTILITY_PATTERN =
+  /^-?(?:text-|font-|leading-|tracking-|decoration-|underline|line-through|no-underline|italic$|not-italic$|uppercase$|lowercase$|capitalize$|normal-case$)/;
+
+/** Alignment is a layout concern of the label, not something every descendant `Text` inherits. */
+const TEXT_ALIGN_PATTERN = /^text-(?:left|center|right|justify|start|end)$/;
+
+/** Strips variants (`sm:`, `data-[state=on]:`, `[&>svg]:`) and the `!` modifier from a class. */
+function getUtility(token: string) {
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < token.length; i++) {
+    const char = token[i];
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth = Math.max(0, depth - 1);
+    else if (char === ':' && depth === 0) start = i + 1;
+  }
+  return token.slice(start).replace(/^!|!$/g, '');
+}
 
 /**
  * Keeps only the text classes of `className`, so a Toggle's `className` can still recolor its label
  * (`text-*`, `font-*`...) without container classes (padding, border, background) leaking into
- * every descendant `Text` through `TextClassContext`.
+ * every descendant `Text` through `TextClassContext`. Variants are kept with their class.
+ *
+ * @example
+ * pickTextClasses('px-4 text-red-500 sm:font-bold data-[state=on]:italic text-center')
+ * // => 'text-red-500 sm:font-bold data-[state=on]:italic'
+ * pickTextClasses('[&>svg]:text-blue-500 bg-muted') // => '[&>svg]:text-blue-500'
  */
 function pickTextClasses(className: string | undefined) {
   return className
     ?.split(/\s+/)
-    .filter((token) => TEXT_CLASS_PATTERN.test(token))
+    .filter((token) => {
+      const utility = getUtility(token);
+      return TEXT_UTILITY_PATTERN.test(utility) && !TEXT_ALIGN_PATTERN.test(utility);
+    })
     .join(' ');
 }
 
@@ -91,4 +115,4 @@ function ToggleIcon({ className, ...props }: React.ComponentProps<typeof Icon>) 
   return <Icon className={cn('size-4 shrink-0', textClass, className)} {...props} />;
 }
 
-export { pickTextClasses, Toggle, ToggleIcon, toggleVariants };
+export { Toggle, ToggleIcon, toggleVariants };

@@ -22,6 +22,8 @@ function Progress({
   return (
     <ProgressPrimitive.Root
       className={cn('bg-primary/20 relative h-2 w-full overflow-hidden rounded-full', className)}
+      // Root reads `value` for aria-valuenow / accessibilityValue.
+      value={value}
       {...props}>
       <Indicator value={value} className={indicatorClassName} />
     </ProgressPrimitive.Root>

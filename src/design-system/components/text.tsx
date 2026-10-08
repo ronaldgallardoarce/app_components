@@ -104,17 +104,35 @@ const isTextLike = (child: React.ReactNode): child is string | number =>
   typeof child === 'string' || typeof child === 'number';
 
 /**
+ * Flattens `children` through nested Fragments (`<><Icon />label</>`), since
+ * `React.Children.toArray` only flattens arrays. Elements nested in a Fragment get their key
+ * prefixed with the Fragment's key so siblings from different levels never collide.
+ */
+function flattenChildren(children: React.ReactNode, keyPrefix = ''): React.ReactNode[] {
+  return React.Children.toArray(children).flatMap((child) => {
+    if (!React.isValidElement<{ children?: React.ReactNode }>(child)) return [child];
+    if (child.type === React.Fragment) {
+      return flattenChildren(child.props.children, `${keyPrefix}${child.key}/`);
+    }
+    return keyPrefix ? [React.cloneElement(child, { key: `${keyPrefix}${child.key}` })] : [child];
+  });
+}
+
+/**
  * RN crashes on raw strings outside `Text`. Text-only children (e.g. `Save {count}`) render
  * as a single `Text`; mixed children (e.g. an icon plus a label) get each string wrapped.
- * Used by every component that renders its children inside a `View`/`Pressable` with a
- * `TextClassContext`, so `<Badge>New</Badge>` works like `<Button>Save</Button>`.
+ * Strings nested in Fragments are handled too. Used by every component that renders its
+ * children inside a `View`/`Pressable` with a `TextClassContext`, so `<Badge>New</Badge>`
+ * works like `<Button>Save</Button>`.
  */
 function renderTextChildren(children: React.ReactNode) {
-  const items = React.Children.toArray(children);
+  const items = flattenChildren(children);
   if (items.length > 0 && items.every(isTextLike)) {
-    return <Text>{children}</Text>;
+    return <Text>{items}</Text>;
   }
-  return React.Children.map(children, (child) => (isTextLike(child) ? <Text>{child}</Text> : child));
+  return items.map((child, index) =>
+    isTextLike(child) ? <Text key={`text-${index}`}>{child}</Text> : child
+  );
 }
 
 export { renderTextChildren, Text, TextClassContext, textVariants, textToneVariants };
