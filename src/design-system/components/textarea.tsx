@@ -2,6 +2,7 @@ import { Text } from '@/design-system/components/text';
 import {
   FieldError,
   fieldErrorHint,
+  FOCUSED_FIELD_CLASS_NAME,
   INVALID_FIELD_CLASS_NAME,
 } from '@/design-system/components/input';
 import { cn } from '@/design-system/lib/utils';
@@ -22,7 +23,12 @@ type TextareaProps = React.ComponentProps<typeof TextInput> &
     invalid?: boolean;
     /** Error message below the field, exposed to screen readers on the field (see `Input`). */
     errorText?: string;
+    /** Screen reader text of the counter. Defaults to `${length} of ${maxLength} characters`. */
+    formatCountLabel?: (length: number, maxLength: number) => string;
   };
+
+const defaultCountLabel = (length: number, maxLength: number) =>
+  `${length} of ${maxLength} characters`;
 
 /** The counter is announced only when this close to the limit (10% of `maxLength`, at least 1). */
 const announceThreshold = (maxLength: number) => Math.max(1, Math.ceil(maxLength * 0.1));
@@ -46,6 +52,7 @@ function Textarea({
   invalid,
   errorText,
   accessibilityHint,
+  formatCountLabel = defaultCountLabel,
   ...props
 }: TextareaProps) {
   const controlled = props.value !== undefined;
@@ -68,7 +75,7 @@ function Textarea({
             // Room for the counter overlaid on the bottom-right corner, so text never runs under it.
             withCount && 'pb-7',
             // After the base classes so tailwind-merge lets the danger border win.
-            (invalid || Boolean(errorText)) && INVALID_FIELD_CLASS_NAME,
+            (invalid || Boolean(errorText)) ? INVALID_FIELD_CLASS_NAME : FOCUSED_FIELD_CLASS_NAME,
             className
           )}
           // Uniwind maps placeholder color through `placeholderTextColorClassName` (`accent-` prefix).
@@ -89,7 +96,7 @@ function Textarea({
           <Text
             // Announced only near the limit, so screen readers are not interrupted on every keystroke.
             aria-live={nearLimit ? 'polite' : 'off'}
-            accessibilityLabel={`${length} of ${maxLength} characters`}
+            accessibilityLabel={formatCountLabel(length, maxLength)}
             // Overlaid inside the field border; it must not steal touches from the input.
             pointerEvents="none"
             className={cn(

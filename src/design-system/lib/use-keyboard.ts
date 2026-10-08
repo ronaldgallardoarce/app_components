@@ -12,10 +12,13 @@ import {
  *
  * Portal content is absolutely positioned over the whole window, and the window does not resize
  * for the keyboard: on iOS it never does, and on Android Expo SDK 54+ enforces edge-to-edge, where
- * `softwareKeyboardLayoutMode: "resize"` no longer resizes it (see `KeyboardAwareScreen`). Without
- * help, the keyboard covers inputs rendered inside overlays.
+ * `softwareKeyboardLayoutMode: "resize"` no longer resizes it. Without help, the keyboard covers
+ * inputs rendered inside overlays.
  *
- * Built on React Native's `Keyboard` events only (no native dependency, Expo Go compatible).
+ * Built on React Native's `Keyboard` events only. Screens use `react-native-keyboard-controller`
+ * (see `KeyboardAwareScreen`); these overlays intentionally do not: they need the overlap of a
+ * measured view (Dialog) and a JS value for collision insets (Popover), which RN's events already
+ * give, and they keep working outside `KeyboardProvider` (e.g. tests, other roots).
  * Reanimated's `useAnimatedKeyboard` is not used: it is deprecated and, on Android, it takes over
  * the window insets for the whole app, which would change the behavior of every other screen.
  * - iOS emits `keyboardWill*` with the animation `duration`, so the overlay moves with the keyboard.
@@ -43,9 +46,10 @@ const timing = (duration: number) => ({
  * view covered by the keyboard (measured in window coordinates, so it is 0 if the window ever does
  * resize). The value lives in a shared value: opening or closing the keyboard animates on the UI
  * thread and never re-renders the overlay's React tree. Padding does not change the view's own
- * frame, so measuring it again is not affected by the previous padding.
+ * frame, so measuring it again is not affected by the previous padding. `minBottom` is the
+ * padding kept while the keyboard is hidden.
  */
-function useKeyboardAvoidingStyle() {
+function useKeyboardAvoidingStyle({ minBottom = 0 }: { minBottom?: number } = {}) {
   const ref = React.useRef<View>(null);
   const inset = useSharedValue(0);
 
@@ -97,7 +101,12 @@ function useKeyboardAvoidingStyle() {
     };
   }, [inset]);
 
-  const style = useAnimatedStyle(() => ({ paddingBottom: inset.get() }));
+  // `minBottom` (e.g. the bottom safe-area inset) applies while the keyboard is hidden; an open
+  // keyboard already covers the navigation bar / home indicator, so the larger value wins.
+  const style = useAnimatedStyle(
+    () => ({ paddingBottom: Math.max(inset.get(), minBottom) }),
+    [minBottom]
+  );
 
   return { ref, style };
 }

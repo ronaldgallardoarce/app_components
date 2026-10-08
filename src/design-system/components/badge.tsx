@@ -1,4 +1,4 @@
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
 import { cn } from '@/design-system/lib/utils';
 import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -60,11 +60,14 @@ type BadgeProps = React.ComponentProps<typeof View> &
     asChild?: boolean;
   } & VariantProps<typeof badgeVariants>;
 
-function Badge({ className, variant, asChild, ...props }: BadgeProps) {
+function Badge({ className, variant, asChild, children, ...props }: BadgeProps) {
   const Component = asChild ? Slot : View;
   return (
     <TextClassContext.Provider value={badgeTextVariants({ variant })}>
-      <Component className={cn(badgeVariants({ variant }), className)} {...props} />
+      <Component className={cn(badgeVariants({ variant }), className)} {...props}>
+        {/* `asChild` passes its single element through untouched (Slot needs an element). */}
+        {asChild ? children : renderTextChildren(children)}
+      </Component>
     </TextClassContext.Provider>
   );
 }

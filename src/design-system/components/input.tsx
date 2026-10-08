@@ -7,6 +7,22 @@ import { TextInput } from 'react-native';
 const INVALID_FIELD_CLASS_NAME = 'border-danger';
 
 /**
+ * Focus indicator of text fields: the border takes the `--color-ring` token while the field is
+ * focused (Uniwind tracks TextInput focus natively). Not applied to invalid fields, so the danger
+ * border keeps signaling the error while the user fixes it.
+ */
+const FOCUSED_FIELD_CLASS_NAME = 'focus:border-ring';
+
+/**
+ * Single-line fields render WITHOUT a line height. `text-base` sets one (24dp), and any explicit
+ * line height on a single-line TextInput misplaces the text: Android clips descenders or shifts the
+ * baseline when it is smaller than the font's natural height, and iOS pushes the text toward the
+ * bottom when it is larger. Without it both platforms center the text natively (see also
+ * `textAlignVertical="center"` in `Input`). Multiline fields keep their line height.
+ */
+const SINGLE_LINE_INPUT_STYLE = { lineHeight: undefined } as const;
+
+/**
  * Field classes shared by every text input of the design system. Exported so inputs that must
  * render a different TextInput (e.g. `BottomSheetTextInput` inside a bottom sheet) stay identical.
  */
@@ -18,8 +34,9 @@ function inputClassName({
   return cn(
     // `min-h-10` (not `h-10`) so the field grows with the system font scale instead of clipping the
     // text; no `sm:` downsizing, landscape phones and tablets are touch devices too.
-    'dark:bg-input/30 border-input-border bg-background text-foreground flex min-h-10 w-full min-w-0 flex-row items-center rounded-md border px-3 py-1 text-base leading-5 shadow-sm shadow-black/5',
+    'dark:bg-input/30 border-input-border bg-background text-foreground flex min-h-10 w-full min-w-0 flex-row items-center rounded-md border px-3 py-1 text-base shadow-sm shadow-black/5',
     editable === false && 'opacity-50',
+    !invalid && FOCUSED_FIELD_CLASS_NAME,
     // After the base classes so tailwind-merge lets the danger border win.
     invalid && INVALID_FIELD_CLASS_NAME,
     className
@@ -70,6 +87,7 @@ function Input({
   invalid,
   errorText,
   accessibilityHint,
+  style,
   ...props
 }: InputProps) {
   const hasError = Boolean(errorText);
@@ -86,6 +104,8 @@ function Input({
           placeholderTextColorClassName
         )}
         accessibilityHint={fieldErrorHint(errorText, accessibilityHint)}
+        textAlignVertical={props.multiline ? undefined : 'center'}
+        style={props.multiline ? style : [SINGLE_LINE_INPUT_STYLE, style]}
         {...props}
       />
       {errorText ? <FieldError>{errorText}</FieldError> : null}
@@ -96,9 +116,11 @@ function Input({
 export {
   FieldError,
   fieldErrorHint,
+  FOCUSED_FIELD_CLASS_NAME,
   Input,
   INPUT_PLACEHOLDER_COLOR_CLASS_NAME,
   INVALID_FIELD_CLASS_NAME,
   inputClassName,
+  SINGLE_LINE_INPUT_STYLE,
 };
 export type { InputProps };

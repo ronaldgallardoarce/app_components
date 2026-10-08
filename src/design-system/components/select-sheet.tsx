@@ -4,6 +4,7 @@ import { Icon } from "@/design-system/components/icon";
 import {
   INPUT_PLACEHOLDER_COLOR_CLASS_NAME,
   inputClassName,
+  SINGLE_LINE_INPUT_STYLE,
 } from "@/design-system/components/input";
 import {
   LIST_ITEM_METRICS,
@@ -105,7 +106,11 @@ type MultiSelectSheetProps<T extends string = string> =
     onValueChange: (value: T[]) => void;
     /** Label of the footer button that closes the sheet. */
     doneLabel?: string;
+    /** Footer summary for a selection count. Defaults to `${count} selected`; pass a translation. */
+    formatSelectedSummary?: (count: number) => string;
   };
+
+const defaultSelectedSummary = (count: number) => `${count} selected`;
 
 /** Largest sheet height, relative to the container (window minus the top safe area). */
 const MAX_SNAP_RATIO = 0.88;
@@ -331,6 +336,9 @@ function SelectSheetCore<T extends string>({
           returnKeyType="search"
           clearButtonMode="while-editing"
           className={inputClassName()}
+          // Same single-line text metrics as `Input` (no line height, centered text).
+          style={SINGLE_LINE_INPUT_STYLE}
+          textAlignVertical="center"
           placeholderTextColorClassName={INPUT_PLACEHOLDER_COLOR_CLASS_NAME}
         />
       ) : null}
@@ -483,6 +491,7 @@ function MultiSelectSheet<T extends string = string>({
   value,
   onValueChange,
   doneLabel = "Done",
+  formatSelectedSummary = defaultSelectedSummary,
   ...props
 }: MultiSelectSheetProps<T>) {
   // Only values that exist in `options` count (stale values are ignored in the label and count).
@@ -507,7 +516,7 @@ function MultiSelectSheet<T extends string = string>({
         );
       }}
       footer={{
-        summary: `${selectedLabels.length} selected`,
+        summary: formatSelectedSummary(selectedLabels.length),
         actionLabel: doneLabel,
       }}
     />

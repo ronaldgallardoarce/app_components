@@ -1,4 +1,5 @@
 import { Icon } from '@/design-system/components/icon';
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { cn } from '@/design-system/lib/utils';
 import * as CheckboxPrimitive from '@rn-primitives/checkbox';
 import { Check } from 'lucide-react-native';
@@ -10,22 +11,27 @@ function Checkbox({
   checkedClassName,
   indicatorClassName,
   iconClassName,
+  onFocus,
+  onBlur,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root> & {
     checkedClassName?: string;
     indicatorClassName?: string;
     iconClassName?: string;
   }) {
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
   return (
     <CheckboxPrimitive.Root
       className={cn(
         'border-input-border dark:bg-input/30 size-4 shrink-0 overflow-hidden rounded-[4px] border shadow-sm shadow-black/5',
         props.checked && cn('border-primary', checkedClassName),
         props.disabled && 'opacity-50',
+        focused && FOCUS_RING_CLASS_NAME,
         className
       )}
       hitSlop={DEFAULT_HIT_SLOP}
-      {...props}>
+      {...props}
+      {...focusHandlers}>
       <CheckboxPrimitive.Indicator
         className={cn('bg-primary h-full w-full items-center justify-center', indicatorClassName)}>
         <Icon

@@ -7,9 +7,11 @@ import { PortalHost } from '@rn-primitives/portal';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { useNavigationTheme } from '@/design-system/lib/navigation-theme';
 import { ThemeToggle } from '@/design-system/preference/theme-toggle';
@@ -26,29 +28,42 @@ export default function RootLayout() {
     SplashScreen.hide();
   }, []);
 
+  // The native root view / window shows through during screen transitions and while a screen
+  // mounts; without this it stays white and flashes in dark mode. Follows every theme change.
+  const rootBackground = navigationTheme.colors.background;
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(rootBackground).catch(() => {
+      // Non-critical: only the transition backdrop color is affected.
+    });
+  }, [rootBackground]);
+
   return (
     // Required by @gorhom/bottom-sheet: gestures need the root view, modal sheets need the provider.
     <GestureHandlerRootView style={styles.root}>
-      <ThemeProvider value={navigationTheme}>
-        <BottomSheetModalProvider>
-          <StatusBar style={navigationTheme.dark ? 'light' : 'dark'} />
-          {/* The theme toggle lives in every header, so switching never requires the catalog. */}
-          <Stack screenOptions={{ headerRight: () => <ThemeToggle /> }}>
-            <Stack.Screen name="index" options={{ title: 'Home' }} />
-            <Stack.Screen name="catalog/index" options={{ title: 'Catalog' }} />
-            {CATALOG_GROUPS.map((group) => (
-              <Stack.Screen
-                key={group.route}
-                name={`catalog/${group.route}`}
-                options={{ title: group.title }}
-              />
-            ))}
-          </Stack>
-        </BottomSheetModalProvider>
-        {/* Required by RNR overlays (Dialog, Popover, dropdown menu...). Must stay last:
-            after the bottom sheet host, so RNR overlays also render above open sheets. */}
-        <PortalHost />
-      </ThemeProvider>
+      {/* Required by react-native-keyboard-controller (KeyboardAwareScreen). It detects Android
+          edge-to-edge (enforced by Expo) on its own, so no translucency props are needed. */}
+      <KeyboardProvider>
+        <ThemeProvider value={navigationTheme}>
+          <BottomSheetModalProvider>
+            <StatusBar style={navigationTheme.dark ? 'light' : 'dark'} />
+            {/* The theme toggle lives in every header, so switching never requires the catalog. */}
+            <Stack screenOptions={{ headerRight: () => <ThemeToggle /> }}>
+              <Stack.Screen name="index" options={{ title: 'Home' }} />
+              <Stack.Screen name="catalog/index" options={{ title: 'Catalog' }} />
+              {CATALOG_GROUPS.map((group) => (
+                <Stack.Screen
+                  key={group.route}
+                  name={`catalog/${group.route}`}
+                  options={{ title: group.title }}
+                />
+              ))}
+            </Stack>
+          </BottomSheetModalProvider>
+          {/* Required by RNR overlays (Dialog, Popover, dropdown menu...). Must stay last:
+              after the bottom sheet host, so RNR overlays also render above open sheets. */}
+          <PortalHost />
+        </ThemeProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

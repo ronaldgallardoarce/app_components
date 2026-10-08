@@ -4,14 +4,16 @@ import {
   type ButtonVariant,
 } from '@/design-system/components/button';
 import { AnimatedPressable } from '@/design-system/components/animated-pressable';
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
 import { useKeyboardAvoidingStyle } from '@/design-system/lib/use-keyboard';
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { usePressed } from '@/design-system/lib/use-pressed';
 import { cn } from '@/design-system/lib/utils';
 import * as AlertDialogPrimitive from '@rn-primitives/alert-dialog';
 import * as React from 'react';
 import { Platform, ScrollView, View, type ViewProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 
 const AlertDialog = AlertDialogPrimitive.Root;
@@ -22,7 +24,10 @@ const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
 const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 
-/** Full-window backdrop; children are centered above the keyboard (see `DialogOverlay`). */
+/**
+ * Full-window backdrop; children are centered above the keyboard and inside the safe area
+ * (see `DialogOverlay`).
+ */
 function AlertDialogOverlay({
   className,
   children,
@@ -30,7 +35,10 @@ function AlertDialogOverlay({
 }: Omit<React.ComponentProps<typeof AlertDialogPrimitive.Overlay>, 'asChild'> & {
     children?: React.ReactNode;
   }) {
-  const { ref: keyboardRef, style: keyboardStyle } = useKeyboardAvoidingStyle();
+  const insets = useSafeAreaInsets();
+  const { ref: keyboardRef, style: keyboardStyle } = useKeyboardAvoidingStyle({
+    minBottom: insets.bottom,
+  });
   return (
     <FullWindowOverlay>
       <AlertDialogPrimitive.Overlay
@@ -46,7 +54,10 @@ function AlertDialogOverlay({
           <Animated.View
             ref={keyboardRef}
             className="w-full flex-1 items-center justify-center"
-            style={keyboardStyle}>
+            style={[
+              { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right },
+              keyboardStyle,
+            ]}>
             <>{children}</>
           </Animated.View>
         </AnimatedPressable>
@@ -138,6 +149,17 @@ type AlertDialogActionProps = React.ComponentProps<typeof AlertDialogPrimitive.A
   variant?: ButtonVariant;
 };
 
+/**
+ * Strings and numbers are wrapped in `Text` (like `Button`). Render-function children (Pressable
+ * state) and `asChild` elements are passed through untouched.
+ */
+function renderActionChildren(
+  children: React.ComponentProps<typeof AlertDialogPrimitive.Action>['children'],
+  asChild: boolean | undefined
+) {
+  return typeof children === 'function' || asChild ? children : renderTextChildren(children);
+}
+
 // Free tier: the pressed state (`usePressed`) feeds `buttonTextVariants` instead of
 // `group-active:`, matching Button. `className` styles the container only.
 function AlertDialogAction({
@@ -145,16 +167,22 @@ function AlertDialogAction({
   variant = 'primary',
   onPressIn,
   onPressOut,
+  onFocus,
+  onBlur,
+  children,
   ...props
 }: AlertDialogActionProps) {
   const { pressed, pressHandlers } = usePressed({ onPressIn, onPressOut });
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, pressed })}>
       <AlertDialogPrimitive.Action
-        className={cn(buttonVariants({ variant }), className)}
+        className={cn(buttonVariants({ variant }), focused && FOCUS_RING_CLASS_NAME, className)}
         {...props}
         {...pressHandlers}
-      />
+        {...focusHandlers}>
+        {renderActionChildren(children, props.asChild)}
+      </AlertDialogPrimitive.Action>
     </TextClassContext.Provider>
   );
 }
@@ -163,16 +191,26 @@ function AlertDialogCancel({
   className,
   onPressIn,
   onPressOut,
+  onFocus,
+  onBlur,
+  children,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
   const { pressed, pressHandlers } = usePressed({ onPressIn, onPressOut });
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant: 'outline', pressed })}>
       <AlertDialogPrimitive.Cancel
-        className={cn(buttonVariants({ variant: 'outline' }), className)}
+        className={cn(
+          buttonVariants({ variant: 'outline' }),
+          focused && FOCUS_RING_CLASS_NAME,
+          className
+        )}
         {...props}
         {...pressHandlers}
-      />
+        {...focusHandlers}>
+        {renderActionChildren(children, props.asChild)}
+      </AlertDialogPrimitive.Cancel>
     </TextClassContext.Provider>
   );
 }

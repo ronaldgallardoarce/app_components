@@ -22,6 +22,10 @@ type PasswordInputProps = Omit<InputProps, 'secureTextEntry'> & {
     variant?: PasswordInputVariant;
     /** Classes for the wrapper `View` (the field classes go to `className`). */
     containerClassName?: string;
+    /** Screen reader label of the toggle while hidden. Defaults to `Show password`. */
+    showPasswordLabel?: string;
+    /** Screen reader label of the toggle while visible. Defaults to `Hide password`. */
+    hidePasswordLabel?: string;
   };
 
 const AUTOFILL = {
@@ -52,6 +56,8 @@ function PasswordInput({
   errorText,
   invalid,
   accessibilityHint,
+  showPasswordLabel = 'Show password',
+  hidePasswordLabel = 'Hide password',
   ...props
 }: PasswordInputProps) {
   const [visible, setVisible] = React.useState(false);
@@ -105,7 +111,7 @@ function PasswordInput({
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+          accessibilityLabel={visible ? hidePasswordLabel : showPasswordLabel}
           accessibilityState={{ disabled }}
           disabled={disabled}
           onPress={() => {

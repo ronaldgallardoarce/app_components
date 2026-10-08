@@ -1,10 +1,13 @@
 import { cn } from '@/design-system/lib/utils';
 import * as ProgressPrimitive from '@rn-primitives/progress';
+import * as React from 'react';
+import { I18nManager } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
+  ReduceMotion,
   useAnimatedStyle,
-  useDerivedValue,
+  useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 
@@ -32,21 +35,37 @@ type IndicatorProps = {
   className?: string;
 };
 
-function Indicator({ value, className }: IndicatorProps) {
-  const progress = useDerivedValue(() => value ?? 0);
+/** The bar grows from the start edge (left in LTR, right in RTL). */
+const TRANSFORM_ORIGIN = I18nManager.isRTL ? 'right' : 'left';
 
-  const indicator = useAnimatedStyle(() => {
-    return {
-      width: withSpring(
-        `${interpolate(progress.value, [0, 100], [1, 100], Extrapolation.CLAMP)}%`,
-        { overshootClamping: true }
-      ),
-    };
-  }, [value]);
+const SPRING = { overshootClamping: true, reduceMotion: ReduceMotion.System };
+
+/** Fraction of the track filled (0.01 - 1): an empty bar still shows a sliver, like RNR. */
+const toScale = (value: number | undefined | null) =>
+  interpolate(value ?? 0, [0, 100], [0.01, 1], Extrapolation.CLAMP);
+
+/**
+ * The indicator is always full width and scaled horizontally from the start edge. `transform`
+ * animates on the UI thread without a layout pass per frame (animating `width` relayouts the bar
+ * on every frame).
+ */
+function Indicator({ value, className }: IndicatorProps) {
+  const scale = useSharedValue(toScale(value));
+
+  React.useEffect(() => {
+    scale.set(withSpring(toScale(value), SPRING));
+  }, [scale, value]);
+
+  const indicator = useAnimatedStyle(() => ({
+    transform: [{ scaleX: scale.get() }],
+  }));
 
   return (
     <ProgressPrimitive.Indicator asChild>
-      <Animated.View style={indicator} className={cn('bg-foreground h-full', className)} />
+      <Animated.View
+        style={[{ transformOrigin: TRANSFORM_ORIGIN }, indicator]}
+        className={cn('bg-foreground h-full w-full', className)}
+      />
     </ProgressPrimitive.Indicator>
   );
 }

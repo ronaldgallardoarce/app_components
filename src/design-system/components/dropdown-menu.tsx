@@ -1,6 +1,7 @@
 import { Icon } from '@/design-system/components/icon';
 import { AnimatedPressable } from '@/design-system/components/animated-pressable';
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
+import { useOverlayInsets } from '@/design-system/lib/use-overlay-insets';
 import { usePressed } from '@/design-system/lib/use-pressed';
 import { cn } from '@/design-system/lib/utils';
 import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
@@ -8,9 +9,11 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react-native';
 import * as React from 'react';
 import {
   Platform,
+  ScrollView,
   type StyleProp,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -62,7 +65,7 @@ function DropdownMenuSubTrigger({
         {...props}
         {...pressHandlers}>
         {/* Wrapped so a long label wraps instead of pushing the chevron out (see AccordionTrigger). */}
-        <View className="min-w-0 flex-1">{children}</View>
+        <View className="min-w-0 flex-1">{renderTextChildren(children)}</View>
         <Icon as={icon} className={cn('text-foreground size-4 shrink-0', iconClassName)} />
       </DropdownMenuPrimitive.SubTrigger>
     </TextClassContext.Provider>
@@ -88,17 +91,28 @@ function DropdownMenuSubContent({
 
 const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fragment;
 
+/**
+ * Safe area: each side of `insets` left undefined defaults to the safe-area inset (see
+ * `PopoverContent`). The panel is capped at the height between the top and bottom insets and its
+ * items scroll, so a long menu never runs off screen; short menus look and size as before.
+ */
 function DropdownMenuContent({
   className,
   overlayClassName,
   overlayStyle,
   portalHost,
+  insets,
+  style,
+  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content> & {
     overlayStyle?: StyleProp<ViewStyle>;
     overlayClassName?: string;
     portalHost?: string;
   }) {
+  const avoidInsets = useOverlayInsets(insets);
+  const { height: windowHeight } = useWindowDimensions();
+  const maxHeight = Math.max(0, windowHeight - avoidInsets.top - avoidInsets.bottom);
   return (
     <DropdownMenuPrimitive.Portal hostName={portalHost}>
       <FullWindowOverlay>
@@ -120,8 +134,13 @@ function DropdownMenuContent({
                   'bg-popover border-border min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-lg shadow-black/5',
                   className
                 )}
-                {...props}
-              />
+                insets={avoidInsets}
+                style={{ maxHeight, ...StyleSheet.flatten(style) }}
+                {...props}>
+                <ScrollView className="grow-0" bounces={false}>
+                  <>{children}</>
+                </ScrollView>
+              </DropdownMenuPrimitive.Content>
             </TextClassContext.Provider>
           </AnimatedPressable>
         </DropdownMenuPrimitive.Overlay>
@@ -134,6 +153,7 @@ function DropdownMenuItem({
   className,
   inset,
   variant,
+  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
     className?: string;
@@ -156,8 +176,10 @@ function DropdownMenuItem({
           inset && 'pl-8',
           className
         )}
-        {...props}
-      />
+        {...props}>
+        {/* Strings are wrapped in `Text` (like `Button`); render functions pass through. */}
+        {typeof children === 'function' || props.asChild ? children : renderTextChildren(children)}
+      </DropdownMenuPrimitive.Item>
     </TextClassContext.Provider>
   );
 }
@@ -189,7 +211,7 @@ function DropdownMenuCheckboxItem({
             <Icon as={Check} className="text-foreground size-4" />
           </DropdownMenuPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
+        <>{renderTextChildren(children)}</>
       </DropdownMenuPrimitive.CheckboxItem>
     </TextClassContext.Provider>
   );
@@ -222,7 +244,7 @@ function DropdownMenuRadioItem({
             <View className="bg-foreground h-2 w-2 rounded-full" />
           </DropdownMenuPrimitive.ItemIndicator>
         </View>
-        <>{children}</>
+        <>{renderTextChildren(children)}</>
       </DropdownMenuPrimitive.RadioItem>
     </TextClassContext.Provider>
   );

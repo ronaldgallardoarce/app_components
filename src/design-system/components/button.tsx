@@ -1,4 +1,5 @@
-import { Text, TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { cn } from '@/design-system/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
@@ -125,21 +126,6 @@ type ButtonProps = ButtonBaseProps &
     | { size?: Exclude<ButtonSize, 'icon'>; accessibilityLabel?: string }
   );
 
-const isTextLike = (child: React.ReactNode): child is string | number =>
-  typeof child === 'string' || typeof child === 'number';
-
-/**
- * RN crashes on raw strings outside `Text`. Text-only children (e.g. `Save {count}`) render
- * as a single `Text`; mixed children (e.g. an icon plus a label) get each string wrapped.
- */
-function renderLabel(children: React.ReactNode) {
-  const items = React.Children.toArray(children);
-  if (items.length > 0 && items.every(isTextLike)) {
-    return <Text>{children}</Text>;
-  }
-  return React.Children.map(children, (child) => (isTextLike(child) ? <Text>{child}</Text> : child));
-}
-
 function Button({
   className,
   variant = 'primary',
@@ -149,25 +135,34 @@ function Button({
   accessibilityState,
   hitSlop,
   children,
+  onFocus,
+  onBlur,
   ...props
 }: ButtonProps) {
   const isDisabled = Boolean(disabled) || loading;
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ ...accessibilityState, disabled: isDisabled, busy: loading }}
-      className={cn(isDisabled && 'opacity-50', buttonVariants({ variant, size }), className)}
+      className={cn(
+        isDisabled && 'opacity-50',
+        buttonVariants({ variant, size }),
+        focused && FOCUS_RING_CLASS_NAME,
+        className
+      )}
       disabled={isDisabled}
       hitSlop={hitSlop ?? BUTTON_HIT_SLOP[size]}
       {...props}
+      {...focusHandlers}
     >
       {({ pressed }) => (
         <TextClassContext.Provider value={buttonTextVariants({ variant, size, pressed })}>
           {loading && (
             <ActivityIndicator size="small" colorClassName={SPINNER_COLOR_CLASS_NAME[variant]} />
           )}
-          {renderLabel(children)}
+          {renderTextChildren(children)}
         </TextClassContext.Provider>
       )}
     </Pressable>

@@ -1,5 +1,6 @@
 import { Icon } from '@/design-system/components/icon';
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { cn } from '@/design-system/lib/utils';
 import * as TogglePrimitive from '@rn-primitives/toggle';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -33,30 +34,54 @@ const toggleVariants = cva(
  */
 const TOGGLE_HIT_SLOP = { default: 6, sm: 8, lg: 4 } as const;
 
+/** Text utilities (color, size, weight, spacing, decoration, case), with or without variants. */
+const TEXT_CLASS_PATTERN =
+  /^!?(?:[\w-]+:)*!?(?:text-|font-|leading-|tracking-|decoration-|underline|line-through|no-underline|italic$|not-italic$|uppercase$|lowercase$|capitalize$|normal-case$)/;
+
+/**
+ * Keeps only the text classes of `className`, so a Toggle's `className` can still recolor its label
+ * (`text-*`, `font-*`...) without container classes (padding, border, background) leaking into
+ * every descendant `Text` through `TextClassContext`.
+ */
+function pickTextClasses(className: string | undefined) {
+  return className
+    ?.split(/\s+/)
+    .filter((token) => TEXT_CLASS_PATTERN.test(token))
+    .join(' ');
+}
+
 function Toggle({
   className,
   variant,
   size,
   hitSlop,
+  onFocus,
+  onBlur,
+  children,
   ...props
 }: React.ComponentProps<typeof TogglePrimitive.Root> & VariantProps<typeof toggleVariants>) {
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
   return (
     <TextClassContext.Provider
       value={cn(
         'text-sm text-foreground font-medium',
         props.pressed && 'text-accent-foreground',
-        className
+        pickTextClasses(className)
       )}>
       <TogglePrimitive.Root
         className={cn(
           toggleVariants({ variant, size }),
           props.disabled && 'opacity-50',
           props.pressed && 'bg-accent',
+          focused && FOCUS_RING_CLASS_NAME,
           className
         )}
         hitSlop={hitSlop ?? TOGGLE_HIT_SLOP[size ?? 'default']}
         {...props}
-      />
+        {...focusHandlers}>
+        {/* Strings are wrapped in `Text` (like `Button`); render functions pass through. */}
+        {typeof children === 'function' || props.asChild ? children : renderTextChildren(children)}
+      </TogglePrimitive.Root>
     </TextClassContext.Provider>
   );
 }
@@ -66,4 +91,4 @@ function ToggleIcon({ className, ...props }: React.ComponentProps<typeof Icon>) 
   return <Icon className={cn('size-4 shrink-0', textClass, className)} {...props} />;
 }
 
-export { Toggle, ToggleIcon, toggleVariants };
+export { pickTextClasses, Toggle, ToggleIcon, toggleVariants };

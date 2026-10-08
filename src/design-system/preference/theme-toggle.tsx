@@ -15,8 +15,21 @@ const PREFERENCE_ICONS: Record<ThemePreference, LucideIcon> = {
 const nextPreference = (current: ThemePreference): ThemePreference =>
   THEME_PREFERENCES[(THEME_PREFERENCES.indexOf(current) + 1) % THEME_PREFERENCES.length];
 
+type ThemeToggleProps = {
+  /**
+   * Screen reader label for the current and next preference. Defaults to
+   * `Theme: ${current}. Switch to ${next}`; pass a translation.
+   */
+  formatAccessibilityLabel?: (current: ThemePreference, next: ThemePreference) => string;
+};
+
+const defaultAccessibilityLabel = (current: ThemePreference, next: ThemePreference) =>
+  `Theme: ${current}. Switch to ${next}`;
+
 /** Compact header control that cycles the stored preference: light -> dark -> system. */
-export function ThemeToggle() {
+export function ThemeToggle({
+  formatAccessibilityLabel = defaultAccessibilityLabel,
+}: ThemeToggleProps = {}) {
   const { preference, setPreference } = useThemePreference();
   const next = nextPreference(preference);
 
@@ -24,7 +37,7 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      accessibilityLabel={`Theme: ${preference}. Switch to ${next}`}
+      accessibilityLabel={formatAccessibilityLabel(preference, next)}
       onPress={() => setPreference(next)}
     >
       <Icon as={PREFERENCE_ICONS[preference]} className="text-foreground size-5" />

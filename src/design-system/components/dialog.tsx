@@ -7,6 +7,7 @@ import { X } from 'lucide-react-native';
 import * as React from 'react';
 import { Platform, ScrollView, Text, View, type ViewProps } from 'react-native';
 import Animated, { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 
 const Dialog = DialogPrimitive.Root;
@@ -24,6 +25,10 @@ const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fr
  * wrapper fills the overlay and is padded by the part the keyboard covers (animated on the UI
  * thread, see `useKeyboardAvoidingStyle`). The wrapper has no touch handlers, so presses on the
  * empty area still reach the overlay and close the dialog.
+ *
+ * The wrapper is also padded by the safe-area insets: the overlay is drawn edge to edge (under
+ * the status bar, notch and navigation bar), so percentage heights such as the content's
+ * `max-h-[85%]` resolve against the visible area and never reach under the system bars.
  */
 function DialogOverlay({
   className,
@@ -33,7 +38,10 @@ function DialogOverlay({
 }: Omit<React.ComponentProps<typeof DialogPrimitive.Overlay>, 'asChild'> & {
   children?: React.ReactNode;
 }) {
-  const { ref: keyboardRef, style: keyboardStyle } = useKeyboardAvoidingStyle();
+  const insets = useSafeAreaInsets();
+  const { ref: keyboardRef, style: keyboardStyle } = useKeyboardAvoidingStyle({
+    minBottom: insets.bottom,
+  });
   return (
     <FullWindowOverlay>
       <DialogPrimitive.Overlay
@@ -50,7 +58,10 @@ function DialogOverlay({
           <Animated.View
             ref={keyboardRef}
             className="w-full flex-1 items-center justify-center"
-            style={keyboardStyle}
+            style={[
+              { paddingTop: insets.top, paddingLeft: insets.left, paddingRight: insets.right },
+              keyboardStyle,
+            ]}
             entering={FadeIn.delay(50).reduceMotion(ReduceMotion.System)}
             exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}>
             <>{children}</>
@@ -70,12 +81,15 @@ function DialogContent({
   className,
   contentContainerClassName,
   portalHost,
+  closeLabel = 'Close',
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   /** Classes for the scrollable children container (defaults: `gap-4 p-6`). */
   contentContainerClassName?: string;
   portalHost?: string;
+  /** Screen reader label of the close button. Defaults to `Close`; pass a translation. */
+  closeLabel?: string;
 }) {
   return (
     <DialogPortal hostName={portalHost}>
@@ -96,9 +110,10 @@ function DialogContent({
             className="absolute right-4 top-4 rounded opacity-70 active:opacity-100"
             // 16pt icon + 16pt on each side = 48dp target; it ends at the frame edge (16pt inset),
             // so it is never clipped by the frame.
-            hitSlop={16}>
+            hitSlop={16}
+            accessibilityLabel={closeLabel}>
             <Icon as={X} className="text-accent-foreground size-4 shrink-0" />
-            <Text className="sr-only">Close</Text>
+            <Text className="sr-only">{closeLabel}</Text>
           </DialogPrimitive.Close>
         </DialogPrimitive.Content>
       </DialogOverlay>

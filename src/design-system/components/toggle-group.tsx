@@ -1,6 +1,7 @@
 import { Icon } from '@/design-system/components/icon';
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
 import { toggleVariants } from '@/design-system/components/toggle';
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { cn } from '@/design-system/lib/utils';
 import * as ToggleGroupPrimitive from '@rn-primitives/toggle-group';
 import type { VariantProps } from 'class-variance-authority';
@@ -48,6 +49,8 @@ function ToggleGroupItem({
   size,
   isFirst,
   isLast,
+  onFocus,
+  onBlur,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
   VariantProps<typeof toggleVariants> & {
@@ -56,6 +59,7 @@ function ToggleGroupItem({
   }) {
   const context = useToggleGroupContext();
   const { value } = ToggleGroupPrimitive.useRootContext();
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
 
   return (
     <TextClassContext.Provider
@@ -76,10 +80,12 @@ function ToggleGroupItem({
           isLast && 'rounded-r-md',
           (context.variant === 'outline' || variant === 'outline') && 'border-l-0',
           (context.variant === 'outline' || variant === 'outline') && isFirst && 'border-l',
+          focused && FOCUS_RING_CLASS_NAME,
           className
         )}
-        {...props}>
-        {children}
+        {...props}
+        {...focusHandlers}>
+        {typeof children === 'function' || props.asChild ? children : renderTextChildren(children)}
       </ToggleGroupPrimitive.Item>
     </TextClassContext.Provider>
   );

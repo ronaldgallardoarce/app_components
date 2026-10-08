@@ -1,3 +1,4 @@
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { cn } from '@/design-system/lib/utils';
 import * as RadioGroupPrimitive from '@rn-primitives/radio-group';
 
@@ -14,17 +15,22 @@ const RADIO_HIT_SLOP = 16;
 function RadioGroupItem({
   className,
   hitSlop = RADIO_HIT_SLOP,
+  onFocus,
+  onBlur,
   ...props
 }: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
   return (
     <RadioGroupPrimitive.Item
       className={cn(
         'border-input-border dark:bg-input/30 aspect-square size-4 shrink-0 items-center justify-center rounded-full border shadow-sm shadow-black/5',
         props.disabled && 'opacity-50',
+        focused && FOCUS_RING_CLASS_NAME,
         className
       )}
       hitSlop={hitSlop}
-      {...props}>
+      {...props}
+      {...focusHandlers}>
       <RadioGroupPrimitive.Indicator className="bg-primary size-2 rounded-full" />
     </RadioGroupPrimitive.Item>
   );

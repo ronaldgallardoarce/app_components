@@ -1,4 +1,5 @@
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
+import { FOCUS_RING_CLASS_NAME, useFocusRing } from '@/design-system/lib/use-focus-ring';
 import { cn } from '@/design-system/lib/utils';
 import * as TabsPrimitive from '@rn-primitives/tabs';
 
@@ -34,9 +35,13 @@ const TABS_TRIGGER_HIT_SLOP = { top: 9, bottom: 9 } as const;
 function TabsTrigger({
   className,
   hitSlop = TABS_TRIGGER_HIT_SLOP,
+  onFocus,
+  onBlur,
+  children,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   const { value } = TabsPrimitive.useRootContext();
+  const { focused, focusHandlers } = useFocusRing({ onFocus, onBlur });
   return (
     <TextClassContext.Provider
       value={cn(
@@ -49,11 +54,15 @@ function TabsTrigger({
 
           props.disabled && 'opacity-50',
           props.value === value && 'bg-background dark:border-foreground/10 dark:bg-input/30',
+          focused && FOCUS_RING_CLASS_NAME,
           className
         )}
         hitSlop={hitSlop}
         {...props}
-      />
+        {...focusHandlers}>
+        {/* Strings are wrapped in `Text` (like `Button`); render functions pass through. */}
+        {typeof children === 'function' || props.asChild ? children : renderTextChildren(children)}
+      </TabsPrimitive.Trigger>
     </TextClassContext.Provider>
   );
 }

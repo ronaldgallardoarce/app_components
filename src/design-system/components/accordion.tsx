@@ -1,5 +1,5 @@
 import { Icon } from '@/design-system/components/icon';
-import { TextClassContext } from '@/design-system/components/text';
+import { renderTextChildren, TextClassContext } from '@/design-system/components/text';
 import { cn } from '@/design-system/lib/utils';
 import * as AccordionPrimitive from '@rn-primitives/accordion';
 import { ChevronDown } from 'lucide-react-native';
@@ -21,10 +21,13 @@ function Accordion({
 }: Omit<React.ComponentProps<typeof AccordionPrimitive.Root>, 'asChild'>) {
   return (
     <LayoutAnimationConfig skipEntering>
+      {/* No `layout` transition on the root: it only re-animated the whole accordion's frame on
+          every toggle. Each item animates its own size and position (see `AccordionItem`), which
+          is what moves the following items smoothly. */}
       <AccordionPrimitive.Root
         {...(props as AccordionPrimitive.RootProps)}
         asChild>
-        <Animated.View layout={LinearTransition.duration(200)}>{children}</Animated.View>
+        <View>{children}</View>
       </AccordionPrimitive.Root>
     </LayoutAnimationConfig>
   );
@@ -81,7 +84,7 @@ function AccordionTrigger({
             )}>
             {/* Yoga gives Text `flexShrink: 0`: without this wrapper a long title pushes the
                 chevron out of the row. `min-w-0 flex-1` lets the title wrap instead. */}
-            <View className="min-w-0 flex-1">{children}</View>
+            <View className="min-w-0 flex-1">{renderTextChildren(children)}</View>
             <Animated.View className="shrink-0" style={chevronStyle}>
               <Icon
                 as={ChevronDown}

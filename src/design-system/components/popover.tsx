@@ -1,6 +1,7 @@
 import { AnimatedPressable } from '@/design-system/components/animated-pressable';
 import { TextClassContext } from '@/design-system/components/text';
 import { useKeyboardHeight } from '@/design-system/lib/use-keyboard';
+import { useOverlayInsets } from '@/design-system/lib/use-overlay-insets';
 import { cn } from '@/design-system/lib/utils';
 import * as PopoverPrimitive from '@rn-primitives/popover';
 import * as React from 'react';
@@ -21,6 +22,9 @@ const FullWindowOverlay = Platform.OS === 'ios' ? RNFullWindowOverlay : React.Fr
  * edge sits above the keyboard. Closing on keyboard open is not an option: focusing an input inside
  * the popover opens the keyboard. Content taller than the space above the keyboard is not clamped
  * to the top inset by the primitive; keep popovers with inputs short (use a Dialog otherwise).
+ *
+ * Safe area: each side of `insets` the caller leaves undefined defaults to the safe-area inset, so
+ * collision handling keeps the popover off the status bar, notch and navigation bar.
  */
 function PopoverContent({
   className,
@@ -33,10 +37,7 @@ function PopoverContent({
     portalHost?: string;
   }) {
   const keyboardHeight = useKeyboardHeight();
-  const avoidInsets =
-    keyboardHeight > 0
-      ? { ...insets, bottom: Math.max(insets?.bottom ?? 0, keyboardHeight) }
-      : insets;
+  const avoidInsets = useOverlayInsets(insets, keyboardHeight);
   return (
     <PopoverPrimitive.Portal hostName={portalHost}>
       <FullWindowOverlay>

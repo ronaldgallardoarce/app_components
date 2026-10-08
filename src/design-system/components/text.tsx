@@ -100,5 +100,22 @@ function Text({ className, asChild = false, variant = 'default', tone, ...props 
   );
 }
 
-export { Text, TextClassContext, textVariants, textToneVariants };
+const isTextLike = (child: React.ReactNode): child is string | number =>
+  typeof child === 'string' || typeof child === 'number';
+
+/**
+ * RN crashes on raw strings outside `Text`. Text-only children (e.g. `Save {count}`) render
+ * as a single `Text`; mixed children (e.g. an icon plus a label) get each string wrapped.
+ * Used by every component that renders its children inside a `View`/`Pressable` with a
+ * `TextClassContext`, so `<Badge>New</Badge>` works like `<Button>Save</Button>`.
+ */
+function renderTextChildren(children: React.ReactNode) {
+  const items = React.Children.toArray(children);
+  if (items.length > 0 && items.every(isTextLike)) {
+    return <Text>{children}</Text>;
+  }
+  return React.Children.map(children, (child) => (isTextLike(child) ? <Text>{child}</Text> : child));
+}
+
+export { renderTextChildren, Text, TextClassContext, textVariants, textToneVariants };
 export type { TextProps, TextTone, TextVariant };
